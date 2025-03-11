@@ -10,8 +10,8 @@ services:
       - db
     restart: always      
     environment:
-      DATABASE_URL: "postgres://postgres:postgres@localhost:5432/rinha?sslmode=disable"
-      # DATABASE_URL: "postgres://postgres:postgres@db:5432/rinha?sslmode=disable"
+      # DATABASE_URL: "postgres://postgres:postgres@localhost:5432/rinha?sslmode=disable"
+      DATABASE_URL: "postgres://postgres:postgres@db:5432/rinha?sslmode=disable"
       PORT: "8080"
     network_mode: host
     deploy:
