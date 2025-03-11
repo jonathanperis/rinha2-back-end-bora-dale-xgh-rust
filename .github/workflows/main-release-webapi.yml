@@ -9,14 +9,13 @@ on:
     branches:
       - main
 
+env:
+  # Set a DATABASE_URL for sqlx preparation.
+  DATABASE_URL: "postgres://postgres:postgres@localhost:5432/rinha?sslmode=disable"
+  
 jobs:
   setup-build-test:
     runs-on: ubuntu-latest
-
-    env:
-      # Set a DATABASE_URL for sqlx preparation.
-      DATABASE_URL: "postgres://postgres:postgres@localhost:5432/rinha?sslmode=disable"
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -66,6 +65,11 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Run Docker Compose for Compiled Query Cache Preparation
+        run: |
+          docker compose -f ./prod/docker-compose.yml up db -d --force-recreate
+          sleep 10          
 
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5

@@ -3,7 +3,7 @@ FROM rust:1.70 as builder
 WORKDIR /app
 
 # Cache dependencies by first copying Cargo.toml and Cargo.lock.
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml ./
 
 # Create a dummy src to allow caching of dependencies.
 RUN mkdir src && echo "fn main() {}" > src/main.rs
