@@ -18,7 +18,7 @@ jobs:
 
     env:
       # Set a DATABASE_URL for sqlx preparation.
-      DATABASE_URL: "postgres://postgres:postgres@localhost/rinha"
+      DATABASE_URL: "postgres://postgres:postgres@localhost:5432/rinha?sslmode=disable"
 
     steps:
       - name: Checkout Repository
@@ -34,11 +34,16 @@ jobs:
           components: rustfmt
           # cache: cargo
 
-      - name: Install SQLx CLI
-        run: cargo install sqlx-cli --version 0.7.0               
+      - name: Build and Run Docker Compose for Compiled Query Cache Preparation
+        run: |
+          docker compose -f ./prod/docker-compose.yml up db -d
+          sleep 10
 
-      - name: Prepare SQLx offline query cache
-        run: cargo sqlx prepare
+      # - name: Install SQLx CLI
+      #   run: cargo install sqlx-cli --version 0.7.0               
+
+      # - name: Prepare SQLx offline query cache
+      #   run: cargo sqlx prepare
 
       - name: Build the application
         run: cargo build --release
