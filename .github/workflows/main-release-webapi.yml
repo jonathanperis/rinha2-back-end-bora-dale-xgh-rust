@@ -16,8 +16,9 @@ jobs:
       run:
         working-directory: "./src/WebApi"
 
-    env:
-      DATABASE_URL: "postgres://postgres:postgres@localhost/rinha"        
+    # env:
+      # needed if not prepare sqlx offline query cache
+      # DATABASE_URL: "postgres://postgres:postgres@localhost/rinha"
 
     steps:
       - name: Checkout Repository
@@ -32,6 +33,9 @@ jobs:
           override: true
           components: rustfmt
           # cache: cargo
+
+      - name: Prepare SQLx offline query cache
+        run: cargo sqlx prepare
 
       - name: Build the application
         run: cargo build --release
