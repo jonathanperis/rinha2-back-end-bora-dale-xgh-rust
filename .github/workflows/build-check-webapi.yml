@@ -39,7 +39,7 @@ jobs:
         #   run: cargo sqlx prepare
 
       - name: Build the application
-        run: cargo build --release --manifest-path ./src/WebApi/Cargo.toml
+        run: cargo build --debug --manifest-path ./src/WebApi/Cargo.toml
 
   container-test:
     needs: setup-build-test

@@ -12,7 +12,7 @@ services:
     environment:
       DATABASE_URL: "postgres://postgres:postgres@db:5432/rinha?sslmode=disable"
     ports:
-      - "4200:8080"   
+      - "6968:8080"   
     network_mode: host
     deploy:
       resources:
@@ -25,7 +25,7 @@ services:
     hostname: webapi2-rust
     container_name: webapi-2-rust
     ports:
-      - "4201:8080"
+      - "6969:8080"
 
   db:
     image: postgres
