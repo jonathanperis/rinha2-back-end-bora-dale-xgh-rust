@@ -58,29 +58,27 @@ async fn get_extrato(
     };
 
     // Execute the stored procedure GetSaldoClienteById
-    // Expected columns: total, limite, data_extrato, ultimas_transacoes (JSON)
+    // Expected columns: Total, Limite, data_extrato, transacoes (jsonb)
     let row = sqlx::query!(
         r#"
-        SELECT total, limite, data_extrato, ultimas_transacoes
+        SELECT Total, Limite, data_extrato, transacoes
         FROM GetSaldoClienteById($1)
         "#,
         id
     )
     .fetch_one(pool.get_ref())
     .await
-    .map_err(|_| HttpResponse::NotFound().finish())?;
+    .map_err(|_| actix_web::error::ErrorNotFound("Client not found"))?;
 
     let saldo = SaldoDto {
-        total: row.total,
-        limite: row.limite,
+        total: row.Total,
+        limite: row.Limite,
         data_extrato: row.data_extrato.to_rfc3339(),
     };
 
     // Parse the JSON field holding the list of transactions.
-    let ultimas_transacoes: Option<Vec<TransacaoDto>> = match row.ultimas_transacoes {
-        Some(json_value) => serde_json::from_value(json_value).ok(),
-        None => None,
-    };
+    let ultimas_transacoes: Option<Vec<TransacaoDto>> = serde_json::from_value(row.transacoes)
+        .ok();
 
     let extrato = ExtratoDto {
         saldo,
@@ -121,7 +119,7 @@ async fn post_transacao(
     }
 
     // Execute the stored procedure InsertTransacao
-    // Expected return: updated saldo (int)
+    // Expected return: updated saldo (int) as an Option<i32>
     let row = sqlx::query!(
         r#"SELECT InsertTransacao($1, $2, $3, $4) as updated_saldo"#,
         id,
@@ -131,12 +129,13 @@ async fn post_transacao(
     )
     .fetch_one(pool.get_ref())
     .await
-    .map_err(|_| HttpResponse::UnprocessableEntity().finish())?;
+    .map_err(|_| actix_web::error::ErrorUnprocessableEntity("Insert transaction failed"))?;
 
     let cliente = ClienteDto {
         id,
         limite,
-        saldo: row.updated_saldo,
+        // Unwrap the option to obtain i32; if None, it will panic with the provided message.
+        saldo: row.updated_saldo.expect("Expected updated saldo"),
     };
 
     Ok(HttpResponse::Ok().json(cliente))
