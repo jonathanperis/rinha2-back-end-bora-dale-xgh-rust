@@ -1,0 +1,26 @@
+FROM rust:1.70 as builder
+
+WORKDIR /app
+
+# Cache dependencies by first copying Cargo.toml and Cargo.lock.
+COPY Cargo.toml Cargo.lock ./
+
+# Create a dummy src to allow caching of dependencies.
+RUN mkdir src && echo "fn main() {}" > src/main.rs
+RUN cargo build --release && rm -f target/release/deps/rinha2_back_end_bora_dale_xgh_rust*
+
+# Now copy the full source and rebuild.
+COPY . .
+
+RUN cargo build --release
+
+# Run stage: a small runtime image.
+FROM debian:buster-slim
+
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /app/target/release/rinha2-back-end-bora-dale-xgh-rust /usr/local/bin/app
+
+EXPOSE 8080
+
+ENTRYPOINT ["/usr/local/bin/app"]

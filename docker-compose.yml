@@ -1,24 +1,21 @@
-name: 'rinha2-jonathanperis-xgh'
+name: 'rinha2-jonathanperis-xgh-bora-dale-rust'
 
 services:
-  webapi1: &webapi1
-    # image: jonathanperis/rinha2-back-end-bora-dale-xgh:latest
+
+  webapi1-rust: &webapi1
+    # image: jonathanperis/rinha2-back-end-bora-dale-xgh-rust:latest
     build:
-      context: ./src/
-      dockerfile: ./WebApi/Dockerfile
-      args:
-        AOT: true
-        TRIM: false
-        EXTRA_OPTIMIZE: true
-        BUILD_ARCHITECTURE: linux-arm64
-        BUILD_CONFIGURATION: Release      
-    hostname: webapi1
-    container_name: webapi-1
+      context: ./src/WebApi
+      dockerfile: Dockerfile    
+    hostname: webapi1-rust
+    container_name: webapi-1-rust
     depends_on:
       - db
     restart: always      
     environment:
-      ConnectionStrings__DefaultConnection: Host=db;Username=postgres;Password=postgres;Database=rinha;Minimum Pool Size=10;Maximum Pool Size=10;Multiplexing=true;
+      DATABASE_URL: "postgres://postgres:postgres@db:5432/rinha?sslmode=disable"
+    ports:
+      - "6968:8080"      
     deploy:
       resources:
         limits:
@@ -27,10 +24,12 @@ services:
     networks:
     - network-bora-dale-xgh
 
-  webapi2:
+  webapi2-rust:
     <<: *webapi1
-    hostname: webapi2
-    container_name: webapi-2
+    hostname: webapi2-rust
+    container_name: webapi-2-rust
+    ports:
+      - "6969:8080"
 
   db:
     image: postgres
@@ -64,8 +63,8 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on: 
-      - webapi1
-      - webapi2
+      - webapi1-rust
+      - webapi2-rust
     ports:
       - "9999:9999"
     deploy:
