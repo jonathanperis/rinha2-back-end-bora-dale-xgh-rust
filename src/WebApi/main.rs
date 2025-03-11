@@ -157,6 +157,10 @@ async fn main() -> std::io::Result<()> {
     let database_url =
         std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
+    let port = 
+        std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
+    let port = port.parse().expect("PORT must be a valid number");
+
     // Create a PostgreSQL connection pool.
     let pool = PgPoolOptions::new()
         .max_connections(5)
@@ -176,7 +180,7 @@ async fn main() -> std::io::Result<()> {
                 HttpResponse::Ok().body("Healthy")
             }))
     })
-    .bind(("0.0.0.0", 8080))?
+    .bind(("0.0.0.0", port))?
     .run()
     .await
 }
