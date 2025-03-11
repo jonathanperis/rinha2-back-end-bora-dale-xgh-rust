@@ -3,6 +3,8 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::collections::HashMap;
+use time::format_description::well_known::Rfc3339;
+use time::PrimitiveDateTime;
 
 // Hardcoded clients mapping (client id -> limite)
 static CLIENTS: Lazy<HashMap<i32, i32>> = Lazy::new(|| {
@@ -51,8 +53,8 @@ async fn get_extrato(
 ) -> Result<HttpResponse> {
     let id = path.into_inner();
 
-    // validate that the client exists (using our hardcoded dictionary)
-    let limite = match CLIENTS.get(&id) {
+    // Validate that the client exists (using our hardcoded dictionary)
+    let _limite = match CLIENTS.get(&id) {
         Some(&lim) => lim,
         None => return Ok(HttpResponse::NotFound().finish()),
     };
@@ -71,15 +73,18 @@ async fn get_extrato(
     .map_err(|_| actix_web::error::ErrorNotFound("Client not found"))?;
 
     let saldo = SaldoDto {
-        total: row.total,
-        limite: row.limite,
-        data_extrato: row
-            .data_extrato
-            .expect("data_extrato is not null")
-            .to_rfc3339(),
+        total: row.total.expect("Expected total value"),
+        limite: row.limite.expect("Expected limite value"),
+        data_extrato: {
+            let dt: PrimitiveDateTime = row
+                .data_extrato
+                .expect("data_extrato is not null");
+            // Format the date using RFC 3339 format
+            dt.format(&Rfc3339).unwrap_or_else(|_| "Invalid date".to_string())
+        },
     };
 
-    // Unwrap the JSON column. Since the query uses a COALESCE, it should never be null.
+    // Unwrap the JSON column (it should never be null due to COALESCE in the function)
     let transacoes_json = row.transacoes.expect("transacoes is not null");
     let ultimas_transacoes: Option<Vec<TransacaoDto>> =
         serde_json::from_value(transacoes_json).ok();
@@ -110,7 +115,7 @@ async fn post_transacao(
 ) -> Result<HttpResponse> {
     let id = path.into_inner();
 
-    // validate that the client exists
+    // Validate that the client exists
     let limite = match CLIENTS.get(&id) {
         Some(&lim) => lim,
         None => return Ok(HttpResponse::NotFound().finish()),
@@ -138,7 +143,7 @@ async fn post_transacao(
     let cliente = ClienteDto {
         id,
         limite,
-        // Unwrap the Option to obtain i32.
+        // Unwrap to obtain i32.
         saldo: row.updated_saldo.expect("Expected updated saldo"),
     };
 
