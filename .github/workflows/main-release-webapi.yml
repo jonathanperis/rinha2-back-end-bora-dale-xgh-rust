@@ -12,9 +12,6 @@ on:
 jobs:
   setup-build-test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: "./src/WebApi"
 
     env:
       # Set a DATABASE_URL for sqlx preparation.
@@ -46,7 +43,7 @@ jobs:
       #   run: cargo sqlx prepare
 
       - name: Build the application
-        run: cargo build --release
+        run: cargo build --release --manifest-path ./src/WebApi/Cargo.toml
 
   build-push-image:
     needs: setup-build-test
