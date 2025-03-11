@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [[bin]]
-name = "app"
+name = "rinha2-back-end-bora-dale-xgh-rust"
 path = "main.rs"
 
 [dependencies]
