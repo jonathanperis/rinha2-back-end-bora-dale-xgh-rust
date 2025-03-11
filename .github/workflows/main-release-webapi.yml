@@ -79,6 +79,7 @@ jobs:
           file: ./src/WebApi/Dockerfile
           build-args: |
             DATABASE_URL=${{ env.DATABASE_URL }}
+          network: "host"
           push: true
           tags: jonathanperis/rinha2-back-end-bora-dale-xgh-rust:latest
 
