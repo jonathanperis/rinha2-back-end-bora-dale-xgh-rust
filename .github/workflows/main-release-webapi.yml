@@ -42,7 +42,7 @@ jobs:
       #   run: cargo sqlx prepare
 
       - name: Build the application (with DATABASE_URL)
-        run: cargo build --debug --manifest-path ./src/WebApi/Cargo.toml
+        run: cargo build --release --manifest-path ./src/WebApi/Cargo.toml
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
 
