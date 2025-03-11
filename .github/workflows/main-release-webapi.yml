@@ -16,6 +16,9 @@ jobs:
       run:
         working-directory: "./src/WebApi"
 
+    env:
+      DATABASE_URL: "postgres://postgres:postgres@localhost/rinha"        
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
