@@ -1,5 +1,9 @@
 FROM rust:1.85 as builder
 
+# Accept DATABASE_URL as a build argument and set it as an environment variable.
+ARG DATABASE_URL
+ENV DATABASE_URL $DATABASE_URL
+
 WORKDIR /app
 
 # Cache dependencies by first copying Cargo.toml and Cargo.lock.
