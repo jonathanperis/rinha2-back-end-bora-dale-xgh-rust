@@ -58,7 +58,7 @@ async fn get_extrato(
     };
 
     // Execute the stored procedure GetSaldoClienteById
-    // Expected columns: Total, Limite, data_extrato, transacoes (jsonb)
+    // Expected columns: total, limite, data_extrato, transacoes (jsonb)
     let row = sqlx::query!(
         r#"
         SELECT Total, Limite, data_extrato, transacoes
@@ -71,14 +71,18 @@ async fn get_extrato(
     .map_err(|_| actix_web::error::ErrorNotFound("Client not found"))?;
 
     let saldo = SaldoDto {
-        total: row.Total,
-        limite: row.Limite,
-        data_extrato: row.data_extrato.to_rfc3339(),
+        total: row.total,
+        limite: row.limite,
+        data_extrato: row
+            .data_extrato
+            .expect("data_extrato is not null")
+            .to_rfc3339(),
     };
 
-    // Parse the JSON field holding the list of transactions.
-    let ultimas_transacoes: Option<Vec<TransacaoDto>> = serde_json::from_value(row.transacoes)
-        .ok();
+    // Unwrap the JSON column. Since the query uses a COALESCE, it should never be null.
+    let transacoes_json = row.transacoes.expect("transacoes is not null");
+    let ultimas_transacoes: Option<Vec<TransacaoDto>> =
+        serde_json::from_value(transacoes_json).ok();
 
     let extrato = ExtratoDto {
         saldo,
@@ -119,7 +123,7 @@ async fn post_transacao(
     }
 
     // Execute the stored procedure InsertTransacao
-    // Expected return: updated saldo (int) as an Option<i32>
+    // Expected return: updated saldo (as Option<i32>)
     let row = sqlx::query!(
         r#"SELECT InsertTransacao($1, $2, $3, $4) as updated_saldo"#,
         id,
@@ -134,7 +138,7 @@ async fn post_transacao(
     let cliente = ClienteDto {
         id,
         limite,
-        // Unwrap the option to obtain i32; if None, it will panic with the provided message.
+        // Unwrap the Option to obtain i32.
         saldo: row.updated_saldo.expect("Expected updated saldo"),
     };
 
