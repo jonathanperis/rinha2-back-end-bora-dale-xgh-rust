@@ -1,5 +1,11 @@
 [package]
 name = "rinha2-back-end-bora-dale-xgh-rust"
+version = "0.1.0"
+edition = "2025"
+
+[[bin]]
+name = "app"
+path = "main.rs"
 
 [dependencies]
 actix-web = "4"
