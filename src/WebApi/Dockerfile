@@ -23,6 +23,7 @@ FROM debian:buster-slim
 
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
+# Copy the built binary from the builder stage.
 COPY --from=builder /app/target/release/rinha2-back-end-bora-dale-xgh-rust /usr/local/bin/app
 
 EXPOSE 8080

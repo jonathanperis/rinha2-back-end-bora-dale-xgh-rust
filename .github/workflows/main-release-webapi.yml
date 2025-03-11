@@ -61,6 +61,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Set up Docker Buildx with host networking
+        uses: docker/setup-buildx-action@v3
+        with:
+          # The driver option below configures Buildx to use the host network.
+          driver-opts: network=host
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -79,7 +85,6 @@ jobs:
           file: ./src/WebApi/Dockerfile
           build-args: |
             DATABASE_URL=${{ env.DATABASE_URL }}
-          network: "host"
           push: true
           tags: jonathanperis/rinha2-back-end-bora-dale-xgh-rust:latest
 
