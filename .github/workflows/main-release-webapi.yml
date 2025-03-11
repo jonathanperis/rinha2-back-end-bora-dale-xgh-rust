@@ -12,15 +12,15 @@ on:
 jobs:
   setup-build-test:
     runs-on: ubuntu-latest
+    env:
+      # Set the DATABASE_URL that will be used in both the build step and as a build argument.
+      DATABASE_URL: "postgres://postgres:postgres@localhost:5432/rinha?sslmode=disable"    
     steps:
+      
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-        env:
-          # Set the DATABASE_URL that will be used in both the build step and as a build argument.
-          DATABASE_URL: "postgres://postgres:postgres@localhost:5432/rinha?sslmode=disable"
 
       - name: Set up Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -49,15 +49,14 @@ jobs:
   build-push-image:
     needs: setup-build-test
     runs-on: ubuntu-latest
+    env:
+      # Set the DATABASE_URL that will be used in both the build step and as a build argument.
+      DATABASE_URL: "postgres://postgres:postgres@localhost:5432/rinha?sslmode=disable"    
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-        env:
-          # Set the DATABASE_URL that will be used in both the build step and as a build argument.
-          DATABASE_URL: "postgres://postgres:postgres@localhost:5432/rinha?sslmode=disable"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
