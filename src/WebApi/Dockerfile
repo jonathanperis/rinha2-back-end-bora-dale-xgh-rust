@@ -5,8 +5,8 @@ WORKDIR /app
 # Cache dependencies by first copying Cargo.toml and Cargo.lock.
 COPY Cargo.toml ./
 
-# Create a dummy src to allow caching of dependencies.
-RUN mkdir src && echo "fn main() {}" > src/main.rs
+# Create a dummy main to allow caching of dependencies.
+RUN echo "fn main() {}" > main.rs
 RUN cargo build --release && rm -f target/release/deps/rinha2_back_end_bora_dale_xgh_rust*
 
 # Now copy the full source and rebuild.
