@@ -5,9 +5,7 @@ ENV SQLX_OFFLINE=1
 
 WORKDIR /app
 
-# Copy Cargo.toml and Cargo.lock to cache dependencies.
 COPY Cargo.toml ./
-COPY Cargo.lock ./
 
 # Create a dummy main to allow caching of dependencies.
 RUN echo "fn main() {}" > main.rs
