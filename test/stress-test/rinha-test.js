@@ -311,7 +311,6 @@ export function validacoes() {
 export function cliente_nao_encontrado() {
   const url = `${baseUrl}/clientes/6/extrato`;
   const res = http.get(url, { tags: { endpoint: '/clientes/:id/extrato' } });
-  // Record response duration specifically for cliente_nao_encontrado.
   clienteNaoEncontradoTrend.add(res.timings.duration);
   check(res, {
     'status 404': (r) => r.status === 404,
