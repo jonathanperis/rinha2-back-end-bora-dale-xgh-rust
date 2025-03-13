@@ -11,7 +11,8 @@ services:
     restart: always      
     environment:
       DATABASE_URL: "postgres://postgres:postgres@db:5432/rinha?sslmode=disable"
-    network_mode: host
+    ports:
+      - "8081:8080"    
     deploy:
       resources:
         limits:
@@ -22,6 +23,8 @@ services:
     <<: *webapi1
     hostname: webapi2-rust
     container_name: webapi-2-rust
+    ports:
+      - "8082:8080"
 
   db:
     image: postgres
@@ -34,7 +37,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: rinha
-    network_mode: host
+    ports:
+      - "5432:5432"
     deploy:
       resources:
         limits:
@@ -51,9 +55,8 @@ services:
     depends_on: 
       - webapi1-rust
       - webapi2-rust
-    expose: 
-      - 9999
-    network_mode: host
+    ports:
+      - "9999:9999"
     deploy:
       resources:
         limits:
@@ -76,4 +79,5 @@ services:
     depends_on:
       - nginx
     entrypoint: ["/bin/sh", "/app/run-rinha-test.sh"]
-    network_mode: host
+    ports:
+      - "5665:5665"
