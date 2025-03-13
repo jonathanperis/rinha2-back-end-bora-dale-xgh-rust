@@ -9,9 +9,6 @@ on:
     branches:
       - main
 
-# env:
-#   DATABASE_URL: "postgres://postgres:postgres@localhost:5432/rinha?sslmode=disable"  
-
 jobs:
   setup-build-test:
     runs-on: ubuntu-latest  
@@ -30,22 +27,8 @@ jobs:
           components: rustfmt
           # cache: cargo
 
-      # - name: Build and Run Docker Compose for Database
-      #   run: |
-      #     docker compose -f ./prod/docker-compose.yml up db -d
-      #     sleep 10
-
-      # - name: Install SQLx CLI
-      #   run: cargo install sqlx-cli --version 0.7.0               
-
-      # - name: Prepare SQLx offline query cache
-      #   run: cargo sqlx prepare
-
       - name: Build the application
         run: cargo build --release --manifest-path ./src/WebApi/Cargo.toml
-        # env:
-        #   DATABASE_URL: ${{ env.DATABASE_URL }}
-        #   SQLX_OFFLINE: 1
 
   build-push-image:
     needs: setup-build-test
