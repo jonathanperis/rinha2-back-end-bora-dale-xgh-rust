@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT Total, Limite, data_extrato, transacoes\n        FROM GetSaldoClienteById($1)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "limite",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "data_extrato",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 3,
+        "name": "transacoes",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "eeb0176ceee0ef8424a2ed6cbb06d03d6b50ac2d3071e0262765fdd96305c9a5"
+}

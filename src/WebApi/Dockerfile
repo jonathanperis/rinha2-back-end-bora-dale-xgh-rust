@@ -1,13 +1,13 @@
-FROM rust:1.85 as builder
+FROM rust:1.85 AS builder
 
-# Accept DATABASE_URL as a build argument and set it as an environment variable.
-ARG DATABASE_URL
-ENV DATABASE_URL ${DATABASE_URL}
+# Enable SQLx offline mode so SQLx uses the offline cache.
+ENV SQLX_OFFLINE=1
 
 WORKDIR /app
 
-# Cache dependencies by first copying Cargo.toml and Cargo.lock.
+# Copy Cargo.toml and Cargo.lock to cache dependencies.
 COPY Cargo.toml ./
+COPY Cargo.lock ./
 
 # Create a dummy main to allow caching of dependencies.
 RUN echo "fn main() {}" > main.rs

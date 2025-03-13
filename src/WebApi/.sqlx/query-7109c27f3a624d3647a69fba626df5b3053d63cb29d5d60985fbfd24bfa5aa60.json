@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT InsertTransacao($1, $2, $3, $4) as updated_saldo",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "updated_saldo",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "7109c27f3a624d3647a69fba626df5b3053d63cb29d5d60985fbfd24bfa5aa60"
+}

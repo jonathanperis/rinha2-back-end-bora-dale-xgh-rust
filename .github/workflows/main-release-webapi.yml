@@ -8,15 +8,15 @@ on:
   push:
     branches:
       - main
-  
+
+# env:
+#   DATABASE_URL: "postgres://postgres:postgres@localhost:5432/rinha?sslmode=disable"  
+
 jobs:
   setup-build-test:
-    runs-on: ubuntu-latest
-    env:
-      # Set the DATABASE_URL that will be used in both the build step and as a build argument.
-      DATABASE_URL: "postgres://postgres:postgres@localhost:5432/rinha?sslmode=disable"    
-    steps:
-      
+    runs-on: ubuntu-latest  
+
+    steps:      
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
@@ -30,28 +30,27 @@ jobs:
           components: rustfmt
           # cache: cargo
 
-      - name: Build and Run Docker Compose for Database
-        run: |
-          docker compose -f ./prod/docker-compose.yml up db -d
-          sleep 10
+      # - name: Build and Run Docker Compose for Database
+      #   run: |
+      #     docker compose -f ./prod/docker-compose.yml up db -d
+      #     sleep 10
 
-      # - name: Install SQLx CLI
-      #   run: cargo install sqlx-cli --version 0.7.0               
+      - name: Install SQLx CLI
+        run: cargo install sqlx-cli --version 0.7.0               
 
-      # - name: Prepare SQLx offline query cache
-      #   run: cargo sqlx prepare
+      - name: Prepare SQLx offline query cache
+        run: cargo sqlx prepare
 
       - name: Build the application (with DATABASE_URL)
         run: cargo build --release --manifest-path ./src/WebApi/Cargo.toml
-        env:
-          DATABASE_URL: ${{ env.DATABASE_URL }}
+        # env:
+        #   DATABASE_URL: ${{ env.DATABASE_URL }}
+        #   SQLX_OFFLINE: 1
 
   build-push-image:
     needs: setup-build-test
     runs-on: ubuntu-latest
-    env:
-      # Set the DATABASE_URL that will be used in both the build step and as a build argument.
-      DATABASE_URL: "postgres://postgres:postgres@localhost:5432/rinha?sslmode=disable"    
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -66,28 +65,21 @@ jobs:
 
       - name: Set up Docker Buildx with host networking
         uses: docker/setup-buildx-action@v3
-        with:
+        # with:
           # The driver option below configures Buildx to use the host network.
-          driver-opts: network=host
+          # driver-opts: network=host
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and Run Docker Compose for Database (for image build)
-        run: |
-          docker compose -f ./prod/docker-compose.yml up db -d --force-recreate
-          sleep 10          
+          password: ${{ secrets.DOCKERHUB_TOKEN }}       
 
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
           context: ./src/WebApi
           file: ./src/WebApi/Dockerfile
-          build-args: |
-            DATABASE_URL=${{ env.DATABASE_URL }}
           push: true
           tags: jonathanperis/rinha2-back-end-bora-dale-xgh-rust:latest
 

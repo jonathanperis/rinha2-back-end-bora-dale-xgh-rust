@@ -6,7 +6,7 @@ services:
     # image: jonathanperis/rinha2-back-end-bora-dale-xgh-rust:latest
     build:
       context: ./src/WebApi
-      dockerfile: Dockerfile    
+      dockerfile: Dockerfile   
     hostname: webapi1-rust
     container_name: webapi-1-rust
     depends_on:
