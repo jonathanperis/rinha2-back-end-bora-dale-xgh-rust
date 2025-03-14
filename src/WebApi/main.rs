@@ -81,13 +81,11 @@ async fn get_extrato(
         },
     };
 
-    // Clone transacoes so we can consume it twice.
-    let transacoes_json = row.transacoes.clone().expect("transacoes is not null");
+    // Get transacoes (transactions)
+    let transacoes_json = row.transacoes.expect("transacoes is not null");
     // Deserialize the JSON into a vector of transactions.
-    let mut ultimas_transacoes: Vec<TransacaoDto> =
+    let ultimas_transacoes: Vec<TransacaoDto> =
         serde_json::from_value(transacoes_json).unwrap_or_else(|_| vec![]);
-    // Reverse the transactions so the latest/most recent comes first.
-    ultimas_transacoes.reverse();
 
     let extrato = ExtratoDto {
         saldo,
