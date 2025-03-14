@@ -25,8 +25,11 @@ struct SaldoDto {
 
 #[derive(Serialize, Deserialize)]
 struct TransacaoDto {
+    #[serde(alias = "Valor")]
     valor: i32,
+    #[serde(alias = "Tipo")]
     tipo: String,
+    #[serde(alias = "Descricao")]
     descricao: String,
 }
 
