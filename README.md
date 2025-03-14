@@ -32,7 +32,7 @@ Métricas colhidas no Docker Desktop após a execução do teste. O teste foi ex
 
 ![Banco de dados](docs/screenshots/metrica-banco-de-dados.png)
 
-- Endpoints (.NET)
+- Endpoints (Rust)
 
 ![Endpoint 1 da API](docs/screenshots/metrica-api-endpoint-1.png)
 
