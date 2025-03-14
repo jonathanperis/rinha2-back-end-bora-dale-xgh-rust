@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::collections::HashMap;
 use time::format_description::well_known::Rfc3339;
-use time::PrimitiveDateTime;
+use time::OffsetDateTime;
 
 // Hardcoded clients mapping (client id -> limite)
 static CLIENTS: Lazy<HashMap<i32, i32>> = Lazy::new(|| {
@@ -53,14 +53,14 @@ async fn get_extrato(
 ) -> Result<HttpResponse> {
     let id = path.into_inner();
 
-    // Validate that the client exists (using our hardcoded dictionary)
+    // Validate that the client exists using our hardcoded dictionary.
     let _limite = match CLIENTS.get(&id) {
         Some(&lim) => lim,
         None => return Ok(HttpResponse::NotFound().finish()),
     };
 
-    // Execute the stored procedure GetSaldoClienteById
-    // Expected columns: total, limite, data_extrato, transacoes (jsonb)
+    // Execute the stored procedure GetSaldoClienteById.
+    // Expected columns: total (Int4), limite (Int4), data_extrato (Timestamp), transacoes (Jsonb)
     let row = sqlx::query!(
         r#"
         SELECT Total, Limite, data_extrato, transacoes
@@ -76,22 +76,27 @@ async fn get_extrato(
         total: row.total.expect("Expected total value"),
         limite: row.limite.expect("Expected limite value"),
         data_extrato: {
-            let dt: PrimitiveDateTime = row
+            // Get the PrimitiveDateTime from the row.
+            let dt: time::PrimitiveDateTime = row
                 .data_extrato
                 .expect("data_extrato is not null");
-            // Format the date using RFC 3339 format
-            dt.format(&Rfc3339).unwrap_or_else(|_| "Invalid date".to_string())
+            // Convert it to OffsetDateTime by assuming UTC.
+            let dt_offset = dt.assume_utc();
+            dt_offset
+                .format(&time::format_description::well_known::Rfc3339)
+                .unwrap_or_else(|_| "Invalid date".to_string())
         },
     };
 
-    // Unwrap the JSON column (it should never be null due to COALESCE in the function)
-    let transacoes_json = row.transacoes.expect("transacoes is not null");
-    let ultimas_transacoes: Option<Vec<TransacaoDto>> =
-        serde_json::from_value(transacoes_json).ok();
+    // Extract and clone transacoes so it can be used without moving it twice.
+    let transacoes_json = row.transacoes.clone().expect("transacoes is not null");
+    let ultimas_transacoes: Vec<TransacaoDto> =
+        serde_json::from_value(transacoes_json).unwrap_or_else(|_| vec![]);
 
     let extrato = ExtratoDto {
         saldo,
-        ultimas_transacoes,
+        // Wrap the vector in Some if continuing with Option<Vec<_>>, or change the type to Vec<_> if preferred.
+        ultimas_transacoes: Some(ultimas_transacoes),
     };
 
     Ok(HttpResponse::Ok().json(extrato))
