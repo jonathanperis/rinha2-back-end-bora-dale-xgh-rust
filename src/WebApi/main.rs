@@ -4,9 +4,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::collections::HashMap;
 use time::format_description::well_known::Rfc3339;
-use time::OffsetDateTime;
+use time::PrimitiveDateTime;
 
-// Hardcoded clients mapping (client id -> limite)
 static CLIENTS: Lazy<HashMap<i32, i32>> = Lazy::new(|| {
     let mut m = HashMap::new();
     m.insert(1, 100000);
@@ -21,7 +20,6 @@ static CLIENTS: Lazy<HashMap<i32, i32>> = Lazy::new(|| {
 struct SaldoDto {
     total: i32,
     limite: i32,
-    // using ISO8601 formatted string for the timestamp
     data_extrato: String,
 }
 
@@ -32,10 +30,11 @@ struct TransacaoDto {
     descricao: String,
 }
 
+// Change here: ultimas_transacoes is directly a Vec instead of Option<Vec<_>>.
 #[derive(Serialize)]
 struct ExtratoDto {
     saldo: SaldoDto,
-    ultimas_transacoes: Option<Vec<TransacaoDto>>,
+    ultimas_transacoes: Vec<TransacaoDto>,
 }
 
 #[derive(Serialize)]
@@ -45,7 +44,6 @@ struct ClienteDto {
     saldo: i32,
 }
 
-/// GET /clientes/{id}/extrato
 #[get("/clientes/{id}/extrato")]
 async fn get_extrato(
     pool: web::Data<PgPool>,
@@ -53,14 +51,13 @@ async fn get_extrato(
 ) -> Result<HttpResponse> {
     let id = path.into_inner();
 
-    // Validate that the client exists using our hardcoded dictionary.
+    // Validate client using hardcoded map.
     let _limite = match CLIENTS.get(&id) {
         Some(&lim) => lim,
         None => return Ok(HttpResponse::NotFound().finish()),
     };
 
-    // Execute the stored procedure GetSaldoClienteById.
-    // Expected columns: total (Int4), limite (Int4), data_extrato (Timestamp), transacoes (Jsonb)
+    // Execute stored procedure to get extrato.
     let row = sqlx::query!(
         r#"
         SELECT Total, Limite, data_extrato, transacoes
@@ -76,42 +73,30 @@ async fn get_extrato(
         total: row.total.expect("Expected total value"),
         limite: row.limite.expect("Expected limite value"),
         data_extrato: {
-            // Get the PrimitiveDateTime from the row.
-            let dt: time::PrimitiveDateTime = row
-                .data_extrato
-                .expect("data_extrato is not null");
-            // Convert it to OffsetDateTime by assuming UTC.
+            // Here, row.data_extrato is a PrimitiveDateTime. Assume UTC to convert it.
+            let dt: PrimitiveDateTime = row.data_extrato.expect("data_extrato is not null");
             let dt_offset = dt.assume_utc();
             dt_offset
-                .format(&time::format_description::well_known::Rfc3339)
+                .format(&Rfc3339)
                 .unwrap_or_else(|_| "Invalid date".to_string())
         },
     };
 
-    // Extract and clone transacoes so it can be used without moving it twice.
+    // Clone transacoes so we can consume it twice.
     let transacoes_json = row.transacoes.clone().expect("transacoes is not null");
+    // Deserialize the JSON into a vector of transactions.
     let ultimas_transacoes: Vec<TransacaoDto> =
         serde_json::from_value(transacoes_json).unwrap_or_else(|_| vec![]);
 
     let extrato = ExtratoDto {
         saldo,
-        // Wrap the vector in Some if continuing with Option<Vec<_>>, or change the type to Vec<_> if preferred.
-        ultimas_transacoes: Some(ultimas_transacoes),
+        ultimas_transacoes,
     };
 
     Ok(HttpResponse::Ok().json(extrato))
 }
 
-/// Checks if the transaction is valid.
-fn is_transacao_valid(transacao: &TransacaoDto) -> bool {
-    let tipo = transacao.tipo.as_str();
-    (tipo == "c" || tipo == "d")
-        && !transacao.descricao.is_empty()
-        && transacao.descricao.len() <= 10
-        && transacao.valor > 0
-}
-
-/// POST /clientes/{id}/transacoes
+// ...POST /clientes/{id}/transacoes stays unchanged...
 #[post("/clientes/{id}/transacoes")]
 async fn post_transacao(
     pool: web::Data<PgPool>,
@@ -120,7 +105,6 @@ async fn post_transacao(
 ) -> Result<HttpResponse> {
     let id = path.into_inner();
 
-    // Validate that the client exists
     let limite = match CLIENTS.get(&id) {
         Some(&lim) => lim,
         None => return Ok(HttpResponse::NotFound().finish()),
@@ -132,8 +116,6 @@ async fn post_transacao(
         return Ok(HttpResponse::UnprocessableEntity().finish());
     }
 
-    // Execute the stored procedure InsertTransacao
-    // Expected return: updated saldo (as Option<i32>)
     let row = sqlx::query!(
         r#"SELECT InsertTransacao($1, $2, $3, $4) as updated_saldo"#,
         id,
@@ -148,21 +130,25 @@ async fn post_transacao(
     let cliente = ClienteDto {
         id,
         limite,
-        // Unwrap to obtain i32.
         saldo: row.updated_saldo.expect("Expected updated saldo"),
     };
 
     Ok(HttpResponse::Ok().json(cliente))
 }
 
+fn is_transacao_valid(transacao: &TransacaoDto) -> bool {
+    let tipo = transacao.tipo.as_str();
+    (tipo == "c" || tipo == "d")
+        && !transacao.descricao.is_empty()
+        && transacao.descricao.len() <= 10
+        && transacao.valor > 0
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    // Retrieve the database URL from the environment. For example:
-    // DATABASE_URL=postgres://postgres:postgres@db:5432/rinha
     let database_url =
         std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
-    // Create a PostgreSQL connection pool.
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .connect(&database_url)
@@ -176,7 +162,6 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(pool.clone()))
             .service(get_extrato)
             .service(post_transacao)
-            // Health check endpoint
             .route("/healthz", web::get().to(|| async {
                 HttpResponse::Ok().body("Healthy")
             }))
