@@ -30,7 +30,6 @@ struct TransacaoDto {
     descricao: String,
 }
 
-// Change here: ultimas_transacoes is directly a Vec instead of Option<Vec<_>>.
 #[derive(Serialize)]
 struct ExtratoDto {
     saldo: SaldoDto,
@@ -57,7 +56,7 @@ async fn get_extrato(
         None => return Ok(HttpResponse::NotFound().finish()),
     };
 
-    // Execute stored procedure to get extrato.
+    // Execute function to get extrato.
     let row = sqlx::query!(
         r#"
         SELECT Total, Limite, data_extrato, transacoes
@@ -85,8 +84,10 @@ async fn get_extrato(
     // Clone transacoes so we can consume it twice.
     let transacoes_json = row.transacoes.clone().expect("transacoes is not null");
     // Deserialize the JSON into a vector of transactions.
-    let ultimas_transacoes: Vec<TransacaoDto> =
+    let mut ultimas_transacoes: Vec<TransacaoDto> =
         serde_json::from_value(transacoes_json).unwrap_or_else(|_| vec![]);
+    // Reverse the transactions so the latest/most recent comes first.
+    ultimas_transacoes.reverse();
 
     let extrato = ExtratoDto {
         saldo,
@@ -96,7 +97,6 @@ async fn get_extrato(
     Ok(HttpResponse::Ok().json(extrato))
 }
 
-// ...POST /clientes/{id}/transacoes stays unchanged...
 #[post("/clientes/{id}/transacoes")]
 async fn post_transacao(
     pool: web::Data<PgPool>,
