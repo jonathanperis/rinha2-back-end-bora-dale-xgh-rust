@@ -1,10 +1,10 @@
 [package]
-name = "rinha2-back-end-bora-dale-xgh-rust"
+name = "rinha2-back-end-rust"
 version = "0.1.0"
 edition = "2024"
 
 [[bin]]
-name = "rinha2-back-end-bora-dale-xgh-rust"
+name = "rinha2-back-end-rust"
 path = "main.rs"
 
 [dependencies]

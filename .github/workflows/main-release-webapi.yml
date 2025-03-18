@@ -61,7 +61,7 @@ jobs:
           context: ./src/WebApi
           file: ./src/WebApi/Dockerfile
           push: true
-          tags: jonathanperis/rinha2-back-end-bora-dale-xgh-rust:latest
+          tags: jonathanperis/rinha2-back-end-rust:latest
           platforms: linux/amd64,linux/arm64/v8
           
   container-test:
@@ -134,7 +134,7 @@ jobs:
           REPORT_NAME="stress-test-report-${TIMESTAMP}.html"
           
           # Clone the main repository into a temporary folder using the GITHUB_TOKEN for authentication
-          git clone https://x-access-token:${GITHUB_TOKEN}@github.com/jonathanperis/rinha2-back-end-bora-dale-xgh-rust.git repo-temp
+          git clone https://x-access-token:${GITHUB_TOKEN}@github.com/jonathanperis/rinha2-back-end-rust.git repo-temp
           cd repo-temp
           
           # Create the destination folder under docs/reports
