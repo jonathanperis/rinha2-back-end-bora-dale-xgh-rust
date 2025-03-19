@@ -9,12 +9,12 @@ COPY Cargo.toml ./
 
 # Create a dummy main to allow caching of dependencies.
 RUN echo "fn main() {}" > main.rs
-RUN cargo build --release && rm -f target/release/deps/rinha2-back-end-rust*
+RUN cargo build && rm -f target/release/deps/rinha2-back-end-rust*
 
 # Now copy the full source and rebuild.
 COPY . .
 
-RUN cargo build --release
+RUN cargo build
 
 # Run stage: a small runtime image.
 FROM debian:bookworm-slim
