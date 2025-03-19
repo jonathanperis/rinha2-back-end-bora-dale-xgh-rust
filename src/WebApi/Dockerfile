@@ -9,7 +9,7 @@ COPY Cargo.toml ./
 
 # Create a dummy main to allow caching of dependencies.
 RUN echo "fn main() {}" > main.rs
-RUN cargo build --release && rm -f target/release/deps/rinha2_back_end_bora_dale_xgh_rust*
+RUN cargo build --release && rm -f target/release/deps/rinha2-back-end-rust*
 
 # Now copy the full source and rebuild.
 COPY . .
